@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { redirect } from "next/navigation"
+import { toast } from "sonner"
 
 const signInFormSchema = z.object({
   email: z.string().email({
@@ -41,8 +42,14 @@ export function SignInForm() {
     signIn.email({
       email: values.email,
       password: values.password,
+    }, {
+      onSuccess: () => {
+        redirect("/dashboard")
+      },
+      onError: (error) => {
+        toast.error(error.error.message)
+      }
     })
-    redirect("/dashboard")
   }
 
   return (

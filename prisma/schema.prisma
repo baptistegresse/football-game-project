@@ -24,6 +24,8 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  sentFriendRequests     Friendship[] @relation("Requester")
+  receivedFriendRequests Friendship[] @relation("Addressee")
 
   @@unique([email])
   @@map("user")
@@ -72,4 +74,25 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Friendship {
+  id          String   @id @default(uuid())
+  requester   User     @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  addressee   User     @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  addresseeId String
+  status      FriendshipStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@map("friendship")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
 }

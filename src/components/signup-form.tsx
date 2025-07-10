@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { redirect } from "next/navigation"
+import { toast } from "sonner"
 
 const signUpFormSchema = z.object({
   name: z.string().min(2, {
@@ -46,8 +47,14 @@ export function SignUpForm() {
       email: values.email,
       name: values.name,
       password: values.password,
+    }, {
+      onSuccess: () => {
+        redirect("/dashboard")
+      },
+      onError: (error) => {
+        toast.error(error.error.message)
+      }
     })
-    redirect("/dashboard")
   }
 
   return (
