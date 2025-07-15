@@ -4,24 +4,26 @@ import { acceptFriend } from "@/actions/accept-friend.action"
 import { rejectFriend } from "@/actions/reject-friend.action"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from "sonner"
 import { User } from "../../generated/prisma"
 
-export const DisplayFriends = ({
-  friends,
-  friendsRequest,
-}: { friends: User[]; friendsRequest: User[] }) => {
-  const handleAcceptFriend = async (id: string) => {
-    const { error, success } = await acceptFriend(id)
-    if (error) {
-      toast.error(error)
-    } else {
-      toast.success(success)
-    }
-  }
+export const DisplayFriends = () => {
 
-  const handleRejectFriend = async (id: string) => {
-    const { error, success } = await rejectFriend(id)
+  const { data: friends } = useQuery({ queryKey: ['friends'], queryFn: () => fetch('/api/friends').then(res => res.json()) })
+  const { data: friendsRequest } = useQuery({ queryKey: ['friendsRequest'], queryFn: () => fetch('/api/friend-requests').then(res => res.json()) })
+  const queryClient = useQueryClient();
+
+
+  const handleFriendAction = async (
+    id: string,
+    action: (id: string) => Promise<{ error?: string; success?: string }>
+  ) => {
+    const { error, success } = await action(id)
+    queryClient.invalidateQueries({ queryKey: ['friendsRequest'] })
+    queryClient.invalidateQueries({ queryKey: ['friends'] })
     if (error) {
       toast.error(error)
     } else {
@@ -36,9 +38,9 @@ export const DisplayFriends = ({
           <CardTitle>Friends</CardTitle>
         </CardHeader>
         <CardContent>
-          {friends.length > 0 ? (
+          {friends && friends.length > 0 ? (
             <ul className="flex flex-col gap-2">
-              {friends.map((friend) => (
+              {friends.map((friend: User) => (
                 <li
                   key={friend.id}
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-muted transition"
@@ -58,9 +60,9 @@ export const DisplayFriends = ({
           <CardTitle>Friend Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          {friendsRequest.length > 0 ? (
+          {friendsRequest && friendsRequest.length > 0 ? (
             <ul className="flex flex-col gap-2">
-              {friendsRequest.map((friend) => (
+              {friendsRequest.map((friend: User) => (
                 <li
                   key={friend.id}
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-muted transition"
@@ -69,14 +71,14 @@ export const DisplayFriends = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleAcceptFriend(friend.id)}
+                    onClick={() => handleFriendAction(friend.id, acceptFriend)}
                   >
                     Accept
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleRejectFriend(friend.id)}
+                    onClick={() => handleFriendAction(friend.id, rejectFriend)}
                   >
                     Reject
                   </Button>

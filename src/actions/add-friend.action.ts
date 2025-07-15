@@ -2,6 +2,7 @@
 
 import { getUser } from "@/lib/auth-server"
 import prisma from "@/lib/prisma"
+import pusher from "@/lib/pusher-server"
 
 export const addFriend = async (name: string) => {
   try {
@@ -27,7 +28,6 @@ export const addFriend = async (name: string) => {
     if (!friend) {
       return { error: "Friend not found" }
     }
-    // Check if a request already exists in this direction
     const existingFriendship = await prisma.friendship.findFirst({
       where: {
         requesterId: session.id,
@@ -70,6 +70,22 @@ export const addFriend = async (name: string) => {
         status: "PENDING"
       }
     })
+
+    await prisma.notification.create({
+      data: {
+        userId: friend.id,
+        type: "FRIEND_REQUEST",
+        content: `${session.name} sent you a friend request`,
+        read: false
+      }
+    })
+
+    await pusher.trigger(`user-${friend.id}`, "new-notification", {
+      type: "FRIEND_REQUEST",
+      content: `${session.name} sent you a friend request`,
+      read: false
+    })
+
     return { success: "Friend request sent" }
   } catch {
     return { error: "An error occurred" }
