@@ -12,8 +12,8 @@ import { User } from "../../generated/prisma"
 
 export const DisplayFriends = () => {
 
-  const { data: friends } = useQuery({ queryKey: ['friends'], queryFn: () => fetch('/api/friends').then(res => res.json()) })
-  const { data: friendsRequest } = useQuery({ queryKey: ['friendsRequest'], queryFn: () => fetch('/api/friend-requests').then(res => res.json()) })
+  const { data: friends } = useQuery({ queryKey: ['friends'], queryFn: () => fetch('/api/friends?status=ACCEPTED').then(res => res.json()) })
+  const { data: friendsRequest } = useQuery({ queryKey: ['friendsRequest'], queryFn: () => fetch('/api/friends?status=PENDING').then(res => res.json()) })
   const queryClient = useQueryClient();
 
 

@@ -1,7 +1,9 @@
 import { getUser } from "@/lib/auth-server"
 import prisma from "@/lib/prisma"
 
-export const getFriends = async () => {
+export type FriendshipStatus = "ACCEPTED" | "PENDING" | "REJECTED" | "BLOCKED"
+
+export const getFriends = async (status: FriendshipStatus) => {
   const session = await getUser()
   if (!session) {
     return []
@@ -9,7 +11,7 @@ export const getFriends = async () => {
   // Find all friendships where the user is either the requester or addressee and status is ACCEPTED
   const friendships = await prisma.friendship.findMany({
     where: {
-      status: "ACCEPTED",
+      status: status,
       OR: [
         { requesterId: session.id },
         { addresseeId: session.id }
